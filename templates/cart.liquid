@@ -1,0 +1,576 @@
+{{ '//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js' | script_tag }}
+{{ 'api.jquery.js' | shopify_asset_url | script_tag }}
+<style>
+
+    .gift-coupon-alert-messege-succ {
+        padding: 10px 20px;
+        background: #efe5ba;
+        color: #964d0b;
+        font-size: 15px;
+        text-transform: capitalize;
+    }
+
+    .gift-coupon-alert-messege-error {
+        padding: 10px 20px;
+        background: #c1efba;
+        color: #065802;
+        font-size: 15px;
+        text-transform: capitalize;
+    }
+
+    .giftProductPopup {
+        display: none;
+        position: fixed;
+        z-index: 999;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .tc {
+        text-align: center;
+    }
+
+    .ProdPopupContent:after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+
+    /* .ProdPopupContent form:nth-child(2n) .gift-wrapper::after {
+    
+    content: "";
+    width: 2px;
+    height: 80%;
+    top: 10%;
+    left: 0;
+    position: absolute;
+    background: #0000004d;
+    
+    } */
+    .gift-wrapper {
+        position: relative;
+    }
+
+    .mt-20 {
+        margin-top: 20px;
+    }
+
+    .gift-coupon-alert-messege {
+        padding: 10px 10px;
+        display: inline-block;
+        background: #f2f2f2;
+        color: #0f3853;
+        font-size: 15px;
+        font-family: "bodoni-urw", serif;
+        font-style: italic;
+    }
+
+    .gift-img {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+        width: 100px;
+        height: 100px
+    }
+
+    .gift-title {
+        display: block;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .currentProductAdd {
+        display: block;
+        margin: 0 auto;
+        margin-top: 0px;
+        margin-top: 16px;
+        padding: 10px 35px;
+        background: #002f5b;
+        font-family: "quasimoda", sans-serif;
+        font-size: 14px;
+        color: #fff;
+    }
+
+    .ProdPopupContent {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 60%;
+    }
+
+    .gift-product-form {
+        width: 33.333333333%;
+        float: left;
+        padding: 0px 30px;
+    }
+
+    .gift-prod-row .gift-product-form + .gift-product-form {
+        border-left: 1px solid #ddd;
+    }
+
+    input#gift-coup-sub {
+        padding: 9px 35px;
+        background: #002f5b;
+        font-size: 20px;
+        font-weight: bold;
+        text-transform: capitalize;
+        color: #fff;
+        border: 0px;
+    }
+
+    input#coupon_code {
+        height: 43px;
+        width: 350px;
+    }
+
+    @media only screen and (min-width: 992px) {
+        .gift-coupon-part label {
+            font-size: 1.21429em;
+            letter-spacing: 0;
+            font-family: "quasimoda", sans-serif;
+        }
+    }
+
+    .gift-icon {
+        padding-left: 35px;
+        position: relative;
+    }
+
+    .gift-icon:before {
+        display: inline-block;
+        font: normal normal normal 14px/1 FontAwesome;
+        font-size: inherit;
+        text-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        font-size: 20px;
+    }
+
+    .gift-info:before {
+        content: "\f06a";
+        color: #0190d3;
+    }
+
+    .gift-success:before {
+        content: "\f058";
+        color: #2dd301;
+    }
+
+    .gift-error:before {
+        content: "\f057";
+        color: #d31c01;
+    }
+</style>
+
+<script data-cfasync="false" type="text/javascript">if (typeof Shopify === "undefined") var Shopify = {};
+    Shopify.cart = {{ cart | json }};</script>
+<div id="sca-fg-owl-carousel">
+    <div id="freegift_cart_container" name="sca.fg.cart" class="sca-fg-cart-container" style="display: none;">
+        <div id="freegift_message" class="owl-carousel"></div>
+    </div>
+    <div id="sca-fg-slider-cart" style="display: none;">
+        <div class="sca-fg-cart-title">
+            <strong>Select your free gift (s)</strong>
+        </div>
+        <div id="sca_freegift_list" class="owl-carousel"></div>
+    </div>
+</div>
+<div id="sca_fg_cart">
+    <div class="page-width page-content">
+
+
+        <div class="grid">
+            <div class="grid__item">
+                {% if cart.item_count > 0 %}
+                    <header class="section-header">
+                        <h1 class="section-header__title">{{ 'cart.general.title' | t }}</h1>
+                    </header>
+
+                    <form action="/cart" method="post" novalidate class="cart">
+
+                        <div class="cart__row small--hide cart__header-labels">
+                            <div class="grid--full">
+                                <div class="grid__item medium-up--two-fifths medium-up--push-three-fifths">
+                                    <div class="grid--full">
+                                        <div class="grid__item one-third small--half text-center">
+                                            {{ 'cart.label.quantity' | t }}
+                                        </div>
+                                        <div class="grid__item two-thirds small--half text-right">
+                                            {{ 'cart.label.total' | t }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% for item in cart.items %}
+
+                            {% for p in item.properties %}
+                                {% if p.first contains "View" %}
+                                    {% assign productimize = true %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% assign gift = item.product.metafields.gift %}
+                            <div class="cart__row">
+                                <div class="grid--full cart__row--table-large">
+
+                                    <div class="grid__item medium-up--three-fifths">
+                                        <div class="grid">
+                                            <div class="grid__item three-quarters">
+                                                <a href="{% if gift['gift'] == "gift" %}#{% else %}{% if item.variant.metafields.secomapp.freegifts %}{{ item.product.url }}{% elsif productimize == true %}{{ item.properties['_edit'] }}{% else %}{{ item.url }}{% endif %}{% endif %}"
+                                                   class="h4 cart__product-name">
+                                                    {{ item.product.title }}
+                                                </a>
+
+                                                {% unless item.variant.title contains 'Default' or productimize == true %}
+                                                    <p class="cart__product-meta">
+                                                        {{ item.variant.title | remove: '/ Default Title'| remove: 'Default Title' | remove: '/ Default' | remove: 'Default' | replace: '(Freegifts)', '' }}
+                                                    </p>
+                                                {% endunless %}
+
+                                                {% assign property_size = item.properties | size %}
+                                                {% if property_size > 0 %}
+                                                    {% include 'productimize-cart', properties : item.properties %}
+                                                {% endif %}
+
+                                                <p class="cart__product-meta">
+                                                    <a href="/cart/change?line={{ forloop.index }}&amp;quantity=0"
+                                                       class="btn btn--small {% if gift['gift'] == "gift" %}giftProductRemove{% endif %}">
+                                                        {{ 'cart.general.remove' | t }}
+                                                    </a>
+                                                </p>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="grid__item medium-up--two-fifths">
+                                        <div class="grid--full cart__row--table">
+
+                                            <div class="grid__item one-third text-center">
+
+                                                <label for="updates_{{ item.key }}"
+                                                       class="visually-hidden">{{ 'cart.label.quantity' | t }}</label>
+                                                <input {% if item.variant.metafields.secomapp.freegifts %}readonly{% endif %}
+                                                       type="number" name="updates[]" id="updates_{{ item.key }}"
+                                                       class="cart__product-qty" value="{{ item.quantity }}" min="0"
+                                                       data-id="{{ item.key }}" {% if gift['gift'] == "gift" %}disabled{% endif %}>
+                                                {% if gift['gift'] == "gift" %}
+                                                    <div id="gift"></div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="grid__item two-thirds text-right">
+                                                {% if item.original_line_price != item.line_price %}
+                                                    <small class="cart__price cart__price--strikethrough">{{ item.original_line_price | money }}</small>
+                                                {% endif %}
+
+                                                <span class="cart__price">{{ sca_price | money }}</span>
+
+                                                {% assign discounts_size = item.discounts | size %}
+                                                {% if discounts_size > 0 %}
+                                                    {% for discount in item.discounts %}
+                                                        <small class="cart__discount">{{ discount.title }}</small>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endfor %}
+
+
+                        <div class="cart__row">
+                            <div class="grid--full cart__row--table-large">
+                                {% comment %}
+                                    Optional, add a textarea for special notes
+                                    - Your theme settings can turn this on or off. Default is on.
+                                    - Make sure you have name="note" for the message to be submitted properly
+                                {% endcomment %}
+                                {% if settings.cart_notes_enable %}
+                                    <div class="grid__item medium-up--seven-twelfths">
+                                        <div class="cart__note">
+                                            <label for="CartSpecialInstructions">{{ 'cart.general.note' | t }}</label>
+                                            <textarea name="note" class="input-full"
+                                                      id="CartSpecialInstructions">{{ cart.note }}</textarea>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="grid__item medium-up--seven-twelfths">
+                                    <div class="gift-coupon-alert-messege gift-icon " style="display:none">
+
+                                    </div>
+
+                                    <div class="gift-coupon-part">
+                                        <div>
+                                            <input name="domain_name" id="domain_name" type="hidden"
+                                                   value="{{ shop.domain }}">
+                                        </div>
+                                        <div style="margin-top: 20px;">
+                                            <label>Apply coupon here:</label>
+                                            <input name="coupon_code" id="coupon_code" type="text" value="">
+                                        </div>
+                                        <div style="margin-top: 20px;">
+                                            <input type="button" id="gift-coup-sub" name="gift-coup-sub" value="submit"
+                                                   style="cursor: pointer;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid__item medium-up--five-twelfths text-center medium-up--text-right">
+                                    <div class="grid--full cart__row--table">
+                                        <div class="grid__item one-half medium-up--two-thirds medium-up--text-center">
+                                            <p class="h4 cart__subtotal">{{ 'cart.general.subtotal' | t }}</p>
+                                        </div>
+                                        <div class="grid__item one-half medium-up--one-third">
+                                            <p class="h4 cart__subtotal">{{ cart.total_price | money }}</p>
+                                        </div>
+                                    </div>
+
+                                    {% if cart.total_discounts > 0 %}
+                                        {% assign cartTotalDiscounts = cart.total_discounts | money %}
+                                        <p class="cart__savings">{{ 'cart.general.savings_html' | t: savings: cartTotalDiscounts }}</p>
+                                    {% endif %}
+                                    <small>
+                                        {{ 'cart.general.shipping_at_checkout' | t }}<br/>
+                                        {% if settings.enable_currencies %}
+                                            {{ 'cart.general.orders_processed_in_currency_html' | t: currency: shop.currency }}
+                                        {% endif %}
+                                    </small>
+                                    {% if settings.cart_terms_conditions_enable %}
+                                        <p class="ajaxcart__note ajaxcart__note--terms">
+                                            <input type="checkbox" id="CartPageAgree"/>
+                                            <label for="CartPageAgree">
+                                                {% if settings.cart_terms_conditions_link != blank %}
+                                                    {{ 'cart.general.terms_html' | t: url: settings.cart_terms_conditions_link }}
+                                                {% else %}
+                                                    {{ 'cart.general.terms' | t }}
+                                                {% endif %}
+                                            </label>
+                                        </p>
+                                    {% endif %}
+                                    <button type="submit" name="update"
+                                            class="btn--secondary update-cart gift-update">{{ 'cart.general.update' | t }}</button>
+                                    <button type="submit" name="checkout"
+                                            class="btn cart__checkout{% if settings.cart_terms_conditions_enable %} cart__checkout--page{% endif %}">
+                                        {{ 'cart.general.checkout' | t }}
+                                    </button>
+
+                                    {% if additional_checkout_buttons and settings.cart_type != 'drawer' %}
+                                        <div class="additional_checkout_buttons">{{ content_for_additional_checkout_buttons }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                      {% include 'salesrep-dropdown' %}
+
+                    </form>
+
+                    <!-- Bluesky code starts here -->
+
+
+
+                    <div class="giftProductPopup">
+                        <div class="ProdPopupContent">
+                            <div class="tc">
+                                <h3>Choose the Gift Product.</h3>
+                            </div>
+
+
+                            <div class="gift-content">
+
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <!-- Bluesky code ends here -->
+
+                {% else %}
+                    <header class="section-header">
+                        <h1 class="section-header__title">{{ 'cart.general.title' | t }}</h1>
+                        <p>{{ 'cart.general.empty' | t }}</p>
+                        <p class="rte">{{ 'cart.general.continue_browsing_html' | t }}</p>
+                    </header>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- app custom scripts started here -->
+
+<script>
+
+    // Gift coupon apply code comes here
+    $(document).ready(function () {
+        var coupon_code, domain_name, product_values, cart_total, min_val, eligible_customer;
+        var eligible_customer, eligible_customer, eligible_customer;
+
+        if ($("#gift").length > 0) {
+            $(".gift-coupon-part").hide();
+            $(".gift-coupon-alert-messege").hide();
+        }
+
+        domain_name = $("#domain_name").val();
+        cart_total = {{ cart.total_price | money_without_currency }};
+
+//Alert Messege Loads here
+        $.ajax({
+            url: 'https://da57ab98.ngrok.io/domain_promo',
+            data: {'domain_name': domain_name},
+            type: "get",
+            jsonp: false,
+            jsonpCallback: 'callback',
+            dataType: "json",
+            success: function (data) {
+                console.log(data, "data comes here");
+                if (data && data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].promo_status == "true") {
+                            if (data[i].price_threshold > cart_total) {
+                                min_val = data[i].price_threshold - cart_total;
+//if(min_val <= 15){ //
+                                console.log("minimum threshold", data[i].eligible_customer);
+                                if (min_val <= data[i].eligible_customer) {
+                                    $(".gift-coupon-alert-messege").html(data[i].below_threshold.replace("var_price", min_val));
+                                    $(".gift-coupon-alert-messege").show();
+                                    $(".gift-coupon-alert-messege").removeClass("gift-success").removeClass("gift-error").addClass("gift-info");
+                                    if ($("#gift").length > 0) {
+                                        $(".gift-coupon-alert-messege").hide();
+                                        $(".gift-coupon-alert-messege").removeClass("gift-success").removeClass("gift-error").addClass("gift-info");
+                                    }
+                                }
+                                if ($("#gift").length > 0) {
+                                    var giftprodtRemve = $('.giftProductRemove').attr('href');
+                                    window.location.href = giftprodtRemve;
+                                }
+                                break;
+                            } else {
+                                min_val = data[i].price_threshold - cart_total;
+                                $(".gift-coupon-alert-messege").html(data[i].above_threshold.replace("var_price", min_val));
+                                $(".gift-coupon-alert-messege").show();
+                                $(".gift-coupon-alert-messege").removeClass("gift-error").addClass("gift-success");
+                                if ($("#gift").length > 0) {
+                                    $(".gift-coupon-alert-messege").hide();
+                                }
+                            }
+                        }
+
+                    }
+                } else {
+                    console.log("====else====k=");
+                    $(".wrapper").hide();
+                    $(".gift-coupon-part").hide();
+                }
+            },
+            failure: function (data) {
+                console.log("error", data);
+            }
+        });
+
+        $("#gift-coup-sub").click(function () {
+            coupon_code = $("#coupon_code").val();
+            if (coupon_code.length > 0) {
+                $.ajax({
+                    url: 'https://da57ab98.ngrok.io/get_coupon',
+                    data: {coupon_code: coupon_code, domain_name: domain_name},
+                    type: "get",
+                    jsonp: false,
+                    jsonpCallback: 'callback',
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data);
+                        if (data) {
+                            min_val = data.price_threshold - cart_total;
+                            if (data.promo_status == "true") {
+                                if (data.price_threshold < cart_total) {
+                                    giftProductList(data);
+                                } else {
+                                    $(".gift-coupon-alert-messege").html(data.not_qualified.replace("var_price", min_val));
+                                    $(".gift-coupon-alert-messege").show();
+                                }
+                            } else {
+                                $(".gift-coupon-alert-messege").html("Invalid Promocode.");
+                                $(".gift-coupon-alert-messege").removeClass("gift-success").addClass("gift-error");
+                            }
+                        } else {
+                            $(".gift-coupon-alert-messege").html("Invalid Promocode.");
+                            $(".gift-coupon-alert-messege").removeClass("gift-success").addClass("gift-error");
+                        }
+
+                    },
+                    failure: function (data) {
+
+                    }
+                });
+            }
+        });
+
+        function giftProductList(data) {
+            var product_images = JSON.parse(data.product_images);
+            product_values = JSON.parse(data.linked_products);
+            var content = "";
+            if (product_values.length > 1) {
+                for (var i = 0; i < product_values.length; i++) {
+                    if ((i + 1) % 3 == "1") {
+                        content += '<div class="gift-prod-row">';
+                    }
+                    var temp_array = product_values[i].split(",");
+                    var img_src = product_images[temp_array[0]];
+                    content += '<form action="/cart/add" name="gift-product-form" class="gift-product-form"><div class="gift-wrapper"><input type="hidden" name="id" value="' + temp_array[0] + '"><input type="hidden" name="quantity" value="1"><img class="gift-img" src="' + img_src + '"><span class="gift-title">' + temp_array[1] + '</span><button type="button" name="currentProductAdd" class="currentProductAdd">Add to cart</button></div></form>';
+                    if ((i + 1) % 3 == 0 || (product_values.length == (i - 1))) {
+                        content += '</div>';
+                    }
+                }
+                $(".gift-content").html(content);
+                $(".giftProductPopup").show();
+            } else {
+                var temp_array = product_values[0].split(",");
+                content += '<form action="/cart/add" name="gift-product-form" class="gift-product-form"><p><input type="hidden" name="id" value="' + temp_array[0] + '"><input type="hidden" name="quantity" value="1"><input type="checkbox" name="currentProductAdd" class="currentProductAdd">' + temp_array[1] + '</p></form>';
+                $(".gift-content").html(content);
+                $(".gift-coupon-alert-messege").html("Gift Product Added successfully.");
+                $(".gift-coupon-alert-messege").show();
+                $(".gift-product-form").closest("form").submit();
+            }
+        }
+
+        $(document).on('click', '.currentProductAdd', function () {
+            $(".giftProductPopup").hide();
+            $(this).closest("form").submit();
+            $(".gift-coupon-alert-messege").html("Gift Product Added successfully.");
+            $(".gift-coupon-alert-messege").show();
+        });
+
+// Here input quantity should be disabled before clicking the update
+
+        $(document).on('click', ".gift-update", function () {
+            $(".cart__product-qty").prop("disabled", false);
+        });
+
+        $(document).click(function (e) {
+            if (!$(e.target).parents().is('.ProdPopupContent') && !$(e.target).is(".ProdPopupContent")) {
+                $(".giftProductPopup").hide();
+            }
+        });
+
+    });
+
+</script>
+
+
+<!-- app custom scripts ended here -->
